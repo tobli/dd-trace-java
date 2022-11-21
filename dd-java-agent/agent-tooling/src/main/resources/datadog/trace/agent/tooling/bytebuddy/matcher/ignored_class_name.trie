@@ -44,6 +44,7 @@
 0 java.lang.Throwable
 # allow ProcessImpl instrumentation
 0 java.lang.ProcessImpl
+0 java.net.http.*
 0 java.net.HttpURLConnection
 0 java.net.URL
 0 java.nio.DirectByteBuffer
@@ -58,6 +59,7 @@
 0 java.lang.Shutdown
 # Concurrent instrumentation modifies the structure of the Cleaner class incompatibly with java9+ modules.
 1 java.util.logging.LogManager$Cleaner
+0 jdk.internal.net.http.*
 1 jdk.*
 1 net.bytebuddy.*
 1 org.apache.felix.framework.URLHandlers*

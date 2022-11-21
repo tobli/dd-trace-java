@@ -1,0 +1,49 @@
+ext {
+  minJavaVersionForTests = JavaVersion.VERSION_11
+}
+
+muzzle {
+  pass {
+    coreJdk()
+  }
+}
+
+apply from: "$rootDir/gradle/java.gradle"
+apply plugin: "idea"
+
+sourceSets {
+  "main_jdk11" {
+    java.srcDirs "${project.projectDir}/src/main/jdk11"
+  }
+}
+
+tasks.named("compileMain_jdk11Java").configure {
+  it.sourceCompatibility = JavaVersion.VERSION_1_8
+  it.targetCompatibility = JavaVersion.VERSION_1_8
+  setJavaVersion(it, 11)
+}
+
+compileTestGroovy {
+  javaLauncher = getJavaLauncherFor(11)
+}
+
+dependencies {
+  main_jdk11CompileOnly project(':dd-java-agent:agent-bootstrap')
+  implementation sourceSets.main_jdk11.output
+}
+
+jar {
+  from sourceSets.main_jdk11.output
+}
+
+forbiddenApisMain_jdk11 {
+  failOnMissingClasses = false
+}
+
+idea {
+  module {
+    jdkName = '11'
+  }
+}
+
+

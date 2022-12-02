@@ -151,8 +151,9 @@ public class Agent {
       /*if CI Visibility is enabled, the PrioritizationType should be {@code Prioritization.ENSURE_TRACE} */
       setSystemPropertyDefault("dd.prioritization.type", "ENSURE_TRACE");
 
-      boolean ciVisibilityAgentlessEnabled = isFeatureEnabled(AgentFeature.CIVISIBILITY_AGENTLESS);
-      if (ciVisibilityAgentlessEnabled) {
+      // The AgentWriter doesn't support the CI Visibility protocol, force the IntakeWriter.
+      boolean ciVisibilityEnabled = isFeatureEnabled(AgentFeature.CIVISIBILITY);
+      if (ciVisibilityEnabled) {
         setSystemPropertyDefault("dd.writer.type", WriterConstants.DD_INTAKE_WRITER_TYPE);
       }
     }

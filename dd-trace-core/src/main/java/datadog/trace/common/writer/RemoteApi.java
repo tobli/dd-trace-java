@@ -75,7 +75,9 @@ public abstract class RemoteApi {
   }
 
   protected abstract Response sendSerializedTraces(final Payload payload);
+
   protected abstract void addResponseListener(final RemoteResponseListener listener);
+
   protected abstract Logger getLogger();
 
   /**

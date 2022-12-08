@@ -59,7 +59,7 @@ class DDEvpProxyApiTest extends DDCoreSpecification {
     response.success()
     response.status() == 200
     agentEvpProxy.getLastRequest().path == path
-    agentEvpProxy.getLastRequest().getHeader(DD_EVP_SUBDOMAIN_HEADER) == intakeSubdomain
+    agentEvpProxy.getLastRequest().getHeader(DD_EVP_SUBDOMAIN_HEADERINO) == intakeSubdomain
 
     cleanup:
     agentEvpProxy.close()

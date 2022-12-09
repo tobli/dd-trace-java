@@ -55,14 +55,14 @@ class WriterFactoryTest extends DDSpecification {
     config.getEnumValue(PRIORITIZATION_TYPE, _, _) >> Prioritization.FAST_LANE
     config.tracerMetricsEnabled >> true
     config.isCiVisibilityEnabled() >> true
-    config.isCiVisibilityAgentlessEnabled() >> isCiVisibilityAgentlessEnabled
+    config.ciVisibilityAgentlessEnabled >> isCiVisibilityAgentlessEnabled
 
     def agentFeaturesDiscovery = Mock(DDAgentFeaturesDiscovery)
     agentFeaturesDiscovery.getEvpProxyEndpoint() >> DDAgentFeaturesDiscovery.V2_EVP_PROXY_ENDPOINT
     agentFeaturesDiscovery.supportsEvpProxy() >> hasEvpProxy
 
     def sharedComm = new SharedCommunicationObjects()
-    sharedComm.featuresDiscovery = agentFeaturesDiscovery
+    sharedComm.setFeaturesDiscovery(agentFeaturesDiscovery)
     sharedComm.createRemaining(config)
 
     def sampler = Mock(Sampler)

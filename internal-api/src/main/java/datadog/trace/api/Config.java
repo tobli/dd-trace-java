@@ -1202,6 +1202,8 @@ public class Config {
       ciVisibilityAgentlessUrl = null;
     }
 
+
+
     remoteConfigEnabled =
         configProvider.getBoolean(REMOTE_CONFIG_ENABLED, DEFAULT_REMOTE_CONFIG_ENABLED);
     remoteConfigIntegrityCheckEnabled =
@@ -1888,6 +1890,9 @@ public class Config {
     return instrumenterConfig.isCiVisibilityEnabled();
   }
 
+  public boolean isUsmEnabled() {
+    return instrumenterConfig.isUsmEnabled();
+  }
   public boolean isCiVisibilityAgentlessEnabled() {
     return ciVisibilityAgentlessEnabled;
   }

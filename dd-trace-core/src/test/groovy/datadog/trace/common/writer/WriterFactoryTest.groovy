@@ -47,7 +47,7 @@ class WriterFactoryTest extends DDSpecification {
   }
 
 
-  def "test override for civisibility"() {
+  def "test override for civisibility when when configuredWriterType=#configuredType hasEvpProxy=#hasEvpProxy and agentless=#isCiVisibilityAgentlessEnabled"() {
     setup:
     def config = Mock(Config)
     config.apiKey >> "my-api-key"

@@ -3,10 +3,7 @@ package datadog.trace.instrumentation.jdbc;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.nameStartsWith;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
-import static datadog.trace.instrumentation.jdbc.JDBCDecorator.DATABASE_QUERY;
-import static datadog.trace.instrumentation.jdbc.JDBCDecorator.DECORATE;
-import static datadog.trace.instrumentation.jdbc.JDBCDecorator.logMissingQueryInfo;
-import static datadog.trace.instrumentation.jdbc.JDBCDecorator.logSQLException;
+import static datadog.trace.instrumentation.jdbc.JDBCDecorator.*;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -22,6 +19,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import net.bytebuddy.asm.Advice;
 
 public abstract class AbstractPreparedStatementInstrumentation extends Instrumenter.Tracing
@@ -75,6 +74,19 @@ public abstract class AbstractPreparedStatementInstrumentation extends Instrumen
         DECORATE.afterStart(span);
         DECORATE.onConnection(
             span, connection, InstrumentationContext.get(Connection.class, DBInfo.class));
+        String sqlText = queryInfo.getSql().toString();
+        if (span != null && DECORATE.injectSQLComment()) {
+          SortedMap<String, Object> tags = new TreeMap<>();
+          switch (SQL_COMMENT_INJECTION_MODE) {
+            case SQL_COMMENT_INJECTION_STATIC:
+              tags = DECORATE.sortedKeyValuePairs(span, false);
+              break;
+            case SQL_COMMENT_INJECTION_FULL:
+              tags = DECORATE.sortedKeyValuePairs(span, true);
+              break;
+          }
+          queryInfo = DBQueryInfo.ofPreparedStatement(DECORATE.augmentSQLStatement(sqlText, tags));
+        }
         DECORATE.onPreparedStatement(span, queryInfo);
         return activateSpan(span);
       } catch (SQLException e) {

@@ -149,6 +149,7 @@ import static datadog.trace.api.config.IastConfig.IAST_DEBUG_ENABLED;
 import static datadog.trace.api.config.IastConfig.IAST_DEDUPLICATION_ENABLED;
 import static datadog.trace.api.config.IastConfig.IAST_MAX_CONCURRENT_REQUESTS;
 import static datadog.trace.api.config.IastConfig.IAST_REQUEST_SAMPLING;
+import static datadog.trace.api.config.IastConfig.IAST_TELEMETRY_VERBOSITY;
 import static datadog.trace.api.config.IastConfig.IAST_VULNERABILITIES_PER_REQUEST;
 import static datadog.trace.api.config.IastConfig.IAST_WEAK_CIPHER_ALGORITHMS;
 import static datadog.trace.api.config.IastConfig.IAST_WEAK_HASH_ALGORITHMS;
@@ -301,6 +302,7 @@ import static datadog.trace.util.Strings.toEnvVar;
 
 import datadog.trace.api.config.GeneralConfig;
 import datadog.trace.api.config.TracerConfig;
+import datadog.trace.api.iast.telemetry.Verbosity;
 import datadog.trace.bootstrap.config.provider.CapturedEnvironmentConfigSource;
 import datadog.trace.bootstrap.config.provider.ConfigProvider;
 import datadog.trace.bootstrap.config.provider.SystemPropertiesConfigSource;
@@ -519,6 +521,7 @@ public class Config {
   private final int iastVulnerabilitiesPerRequest;
   private final float iastRequestSampling;
   private final boolean iastDebugEnabled;
+  private final Verbosity iastTelemetryVerbosity;
 
   private final boolean ciVisibilityAgentlessEnabled;
   private final String ciVisibilityAgentlessUrl;
@@ -1200,6 +1203,8 @@ public class Config {
             configProvider.getString(IAST_WEAK_CIPHER_ALGORITHMS));
     iastDeduplicationEnabled =
         configProvider.getBoolean(IAST_DEDUPLICATION_ENABLED, DEFAULT_IAST_DEDUPLICATION_ENABLED);
+    iastTelemetryVerbosity =
+        configProvider.getEnum(IAST_TELEMETRY_VERBOSITY, Verbosity.class, Verbosity.INFORMATION);
 
     ciVisibilityAgentlessEnabled =
         configProvider.getBoolean(
@@ -1911,6 +1916,10 @@ public class Config {
 
   public float getIastRequestSampling() {
     return iastRequestSampling;
+  }
+
+  public Verbosity getIastTelemetryVerbosity() {
+    return iastTelemetryVerbosity;
   }
 
   public boolean isCiVisibilityEnabled() {

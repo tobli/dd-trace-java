@@ -338,6 +338,7 @@ public class LogProbesInstrumentationTest {
 
         return new Snapshot.ProbeDetails(
             id,
+            0,
             location,
             Snapshot.MethodLocation.DEFAULT,
             false,
@@ -349,6 +350,7 @@ public class LogProbesInstrumentationTest {
                     (ProbeDefinition relatedProbe) ->
                         new Snapshot.ProbeDetails(
                             relatedProbe.getId(),
+                            0,
                             location,
                             Snapshot.MethodLocation.DEFAULT,
                             false,

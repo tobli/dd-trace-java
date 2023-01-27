@@ -16,13 +16,7 @@ import datadog.trace.api.Config;
 import datadog.trace.api.GlobalTracer;
 import datadog.trace.api.Tracer;
 import datadog.trace.api.config.TraceInstrumentationConfig;
-import datadog.trace.bootstrap.debugger.CapturedStackFrame;
-import datadog.trace.bootstrap.debugger.CorrelationAccess;
-import datadog.trace.bootstrap.debugger.DebuggerContext;
-import datadog.trace.bootstrap.debugger.DiagnosticMessage;
-import datadog.trace.bootstrap.debugger.Limits;
-import datadog.trace.bootstrap.debugger.ProbeRateLimiter;
-import datadog.trace.bootstrap.debugger.Snapshot;
+import datadog.trace.bootstrap.debugger.*;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import java.io.BufferedReader;
@@ -101,8 +95,8 @@ public class DebuggerTransformerTest {
     }
 
     @Override
-    public void addDiagnostics(String probeId, List<DiagnosticMessage> messages) {
-      errors.computeIfAbsent(probeId, k -> new ArrayList<>()).addAll(messages);
+    public void addDiagnostics(ProbeId probeId, List<DiagnosticMessage> messages) {
+      errors.computeIfAbsent(probeId.getId(), k -> new ArrayList<>()).addAll(messages);
     }
   }
 

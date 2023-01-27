@@ -216,6 +216,7 @@ public class LogProbe extends ProbeDefinition {
     this(
         LANGUAGE,
         null,
+        0,
         true,
         null,
         null,
@@ -231,6 +232,7 @@ public class LogProbe extends ProbeDefinition {
   public LogProbe(
       String language,
       String id,
+      int version,
       boolean active,
       String[] tagStrs,
       Where where,
@@ -241,7 +243,7 @@ public class LogProbe extends ProbeDefinition {
       ProbeCondition probeCondition,
       Capture capture,
       Sampling sampling) {
-    super(language, id, active, tagStrs, where, evaluateAt);
+    super(language, id, version, active, tagStrs, where, evaluateAt);
     this.template = template;
     this.segments = segments;
     this.captureSnapshot = captureSnapshot;
@@ -291,7 +293,7 @@ public class LogProbe extends ProbeDefinition {
     LogProbe that = (LogProbe) o;
     return active == that.active
         && Objects.equals(language, that.language)
-        && Objects.equals(id, that.id)
+        && Objects.equals(probeId, that.probeId)
         && Arrays.equals(tags, that.tags)
         && Objects.equals(tagMap, that.tagMap)
         && Objects.equals(where, that.where)
@@ -311,7 +313,7 @@ public class LogProbe extends ProbeDefinition {
     int result =
         Objects.hash(
             language,
-            id,
+            probeId,
             active,
             tagMap,
             where,
@@ -334,9 +336,8 @@ public class LogProbe extends ProbeDefinition {
         + "language='"
         + language
         + '\''
-        + ", id='"
-        + id
-        + '\''
+        + ", probeId="
+        + probeId
         + ", active="
         + active
         + ", tags="
@@ -416,6 +417,7 @@ public class LogProbe extends ProbeDefinition {
       return new LogProbe(
           language,
           probeId,
+          version,
           active,
           tagStrs,
           where,

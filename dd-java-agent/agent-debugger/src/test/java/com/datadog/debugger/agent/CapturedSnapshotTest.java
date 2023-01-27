@@ -1405,6 +1405,7 @@ public class CapturedSnapshotTest {
 
         return new Snapshot.ProbeDetails(
             id,
+            0,
             location,
             ProbeDefinition.MethodLocation.convert(probe.getEvaluateAt()),
             true,
@@ -1416,6 +1417,7 @@ public class CapturedSnapshotTest {
                     (ProbeDefinition relatedProbe) ->
                         new Snapshot.ProbeDetails(
                             relatedProbe.getId(),
+                            0,
                             location,
                             ProbeDefinition.MethodLocation.convert(relatedProbe.getEvaluateAt()),
                             true,

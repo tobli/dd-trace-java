@@ -340,7 +340,7 @@ public class DebuggerTransformer implements ClassFileTransformer {
           listener.instrumentationResult(definition, result);
         }
         if (!result.getDiagnostics().isEmpty()) {
-          DebuggerContext.reportDiagnostics(definition.getId(), result.getDiagnostics());
+          DebuggerContext.reportDiagnostics(definition.getProbeId(), result.getDiagnostics());
         }
       }
     }
@@ -362,7 +362,7 @@ public class DebuggerTransformer implements ClassFileTransformer {
     String msg = String.format(format, className, location);
     DiagnosticMessage diagnosticMessage = new DiagnosticMessage(DiagnosticMessage.Kind.ERROR, msg);
     DebuggerContext.reportDiagnostics(
-        definition.getId(), Collections.singletonList(diagnosticMessage));
+        definition.getProbeId(), Collections.singletonList(diagnosticMessage));
     log.debug("{} for definition: {}", msg, definition);
   }
 

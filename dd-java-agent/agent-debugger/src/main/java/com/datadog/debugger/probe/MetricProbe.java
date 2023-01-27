@@ -26,12 +26,13 @@ public class MetricProbe extends ProbeDefinition {
   // no-arg constructor is required by Moshi to avoid creating instance with unsafe and by-passing
   // constructors, including field initializers.
   public MetricProbe() {
-    this(LANGUAGE, null, true, null, null, MethodLocation.DEFAULT, MetricKind.COUNT, null, null);
+    this(LANGUAGE, null, 0, true, null, null, MethodLocation.DEFAULT, MetricKind.COUNT, null, null);
   }
 
   public MetricProbe(
       String language,
       String probeId,
+      int version,
       boolean active,
       String[] tagStrs,
       Where where,
@@ -39,7 +40,7 @@ public class MetricProbe extends ProbeDefinition {
       MetricKind kind,
       String metricName,
       ValueScript value) {
-    super(language, probeId, active, tagStrs, where, evaluateAt);
+    super(language, probeId, version, active, tagStrs, where, evaluateAt);
     this.kind = kind;
     this.metricName = metricName;
     this.value = value;
@@ -92,7 +93,16 @@ public class MetricProbe extends ProbeDefinition {
 
     public MetricProbe build() {
       return new MetricProbe(
-          language, probeId, active, tagStrs, where, evaluateAt, kind, metricName, valueScript);
+          language,
+          probeId,
+          version,
+          active,
+          tagStrs,
+          where,
+          evaluateAt,
+          kind,
+          metricName,
+          valueScript);
     }
   }
 
@@ -104,7 +114,7 @@ public class MetricProbe extends ProbeDefinition {
     MetricProbe that = (MetricProbe) o;
     return active == that.active
         && Objects.equals(language, that.language)
-        && Objects.equals(id, that.id)
+        && Objects.equals(probeId, that.probeId)
         && Arrays.equals(tags, that.tags)
         && Objects.equals(tagMap, that.tagMap)
         && Objects.equals(where, that.where)
@@ -118,7 +128,7 @@ public class MetricProbe extends ProbeDefinition {
   @Override
   public int hashCode() {
     int result =
-        Objects.hash(language, id, active, tagMap, where, evaluateAt, kind, metricName, value);
+        Objects.hash(language, probeId, active, tagMap, where, evaluateAt, kind, metricName, value);
     result = 31 * result + Arrays.hashCode(tags);
     return result;
   }
@@ -130,9 +140,8 @@ public class MetricProbe extends ProbeDefinition {
         + "language='"
         + language
         + '\''
-        + ", id='"
-        + id
-        + '\''
+        + ", probeId="
+        + probeId
         + ", active="
         + active
         + ", tags="

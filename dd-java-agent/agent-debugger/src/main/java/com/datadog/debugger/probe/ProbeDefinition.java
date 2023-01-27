@@ -5,6 +5,7 @@ import com.squareup.moshi.JsonAdapter;
 import com.squareup.moshi.JsonReader;
 import com.squareup.moshi.JsonWriter;
 import datadog.trace.bootstrap.debugger.DiagnosticMessage;
+import datadog.trace.bootstrap.debugger.ProbeId;
 import datadog.trace.bootstrap.debugger.Snapshot;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,7 +41,7 @@ public abstract class ProbeDefinition {
   }
 
   protected final String language;
-  protected final String id;
+  protected final ProbeId probeId;
   protected final boolean active;
   protected final Tag[] tags;
   protected final Map<String, String> tagMap = new HashMap<>();
@@ -52,12 +53,13 @@ public abstract class ProbeDefinition {
   public ProbeDefinition(
       String language,
       String id,
+      int version,
       boolean active,
       String[] tagStrs,
       Where where,
       MethodLocation evaluateAt) {
     this.language = language;
-    this.id = id;
+    this.probeId = new ProbeId(id, version);
     this.active = active;
     tags = Tag.fromStrings(tagStrs);
     initTagMap(tagMap, tags);
@@ -66,7 +68,11 @@ public abstract class ProbeDefinition {
   }
 
   public String getId() {
-    return id;
+    return probeId.getId();
+  }
+
+  public ProbeId getProbeId() {
+    return probeId;
   }
 
   public String getLanguage() {
@@ -115,9 +121,9 @@ public abstract class ProbeDefinition {
     return additionalProbes;
   }
 
-  public Stream<String> getAllProbeIds() {
+  public Stream<ProbeId> getAllProbeIds() {
     return Stream.concat(Stream.of(this), getAdditionalProbes().stream())
-        .map(ProbeDefinition::getId);
+        .map(ProbeDefinition::getProbeId);
   }
 
   private static void initTagMap(Map<String, String> tagMap, Tag[] tags) {
@@ -142,6 +148,7 @@ public abstract class ProbeDefinition {
     protected String[] tagStrs;
     protected Where where;
     protected MethodLocation evaluateAt = MethodLocation.DEFAULT;
+    protected int version;
 
     public T language(String language) {
       this.language = language;
@@ -150,6 +157,11 @@ public abstract class ProbeDefinition {
 
     public T probeId(String probeId) {
       this.probeId = probeId;
+      return (T) this;
+    }
+
+    public T version(int version) {
+      this.version = version;
       return (T) this;
     }
 

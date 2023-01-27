@@ -14,6 +14,7 @@ import com.datadog.debugger.probe.ProbeDefinition;
 import datadog.trace.api.Config;
 import datadog.trace.bootstrap.debugger.DebuggerContext;
 import datadog.trace.bootstrap.debugger.DiagnosticMessage;
+import datadog.trace.bootstrap.debugger.ProbeId;
 import datadog.trace.bootstrap.debugger.Snapshot;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
@@ -788,7 +789,7 @@ public class MetricProbesInstrumentationTest {
     public void addSnapshot(Snapshot snapshot) {}
 
     @Override
-    public void addDiagnostics(String probeId, List<DiagnosticMessage> messages) {
+    public void addDiagnostics(ProbeId probeId, List<DiagnosticMessage> messages) {
       for (DiagnosticMessage msg : messages) {
         System.out.println(msg);
       }

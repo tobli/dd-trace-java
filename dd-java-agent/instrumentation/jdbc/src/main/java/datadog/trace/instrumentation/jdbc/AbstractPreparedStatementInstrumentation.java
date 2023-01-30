@@ -70,6 +70,10 @@ public abstract class AbstractPreparedStatementInstrumentation extends Instrumen
           return null;
         }
 
+        // TODO: given that we aren't grabbing the actual argument here,
+        // im not sure this will work but trying to first get the statement
+        // instrumentation to work via a local test
+
         final AgentSpan span = startSpan(DATABASE_QUERY);
         DECORATE.afterStart(span);
         DECORATE.onConnection(

@@ -135,7 +135,7 @@ public class DebuggerAgent {
       log.debug("Probe definitions loaded from file {}", probeFilePath);
       configurationUpdater.accept(configuration);
     } catch (IOException ex) {
-      log.error("Unable to load config file {} Exception: {}", probeFilePath, ex.getMessage());
+      log.error("Unable to load config file {}: {}", probeFilePath, ex);
     }
   }
 

@@ -79,7 +79,7 @@ public class ProductState {
       try {
         callListenerCommit(hinter);
       } catch (Exception ex) {
-        log.error("Error committing changes for product" + product, ex);
+        log.error("Error committing changes for product {}", product, ex);
       }
     }
 

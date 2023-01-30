@@ -579,7 +579,7 @@ public class Agent {
   private static synchronized void initializeJmxSystemAccessProvider(
       final ClassLoader classLoader) {
     if (log.isDebugEnabled()) {
-      log.debug("Initializing JMX system access provider for " + classLoader.toString());
+      log.debug("Initializing JMX system access provider for {}", classLoader.toString());
     }
     try {
       final Class<?> tracerInstallerClass =
@@ -922,7 +922,9 @@ public class Agent {
     return false;
   }
 
-  /** @return {@code true} if the agent feature is enabled */
+  /**
+   * @return {@code true} if the agent feature is enabled
+   */
   private static boolean isFeatureEnabled(AgentFeature feature) {
     // must be kept in sync with logic from Config!
     final String featureEnabledSysprop = feature.getSystemProp();
@@ -940,7 +942,9 @@ public class Agent {
     }
   }
 
-  /** @see datadog.trace.api.ProductActivation#fromString(String) */
+  /**
+   * @see datadog.trace.api.ProductActivation#fromString(String)
+   */
   private static boolean isAppSecFullyDisabled() {
     // must be kept in sync with logic from Config!
     final String featureEnabledSysprop = AgentFeature.APPSEC.systemProp;
@@ -964,7 +968,9 @@ public class Agent {
     return value;
   }
 
-  /** @return configured JMX start delay in seconds */
+  /**
+   * @return configured JMX start delay in seconds
+   */
   private static int getJmxStartDelay() {
     String startDelay = ddGetProperty("dd.dogstatsd.start-delay");
     if (startDelay == null) {

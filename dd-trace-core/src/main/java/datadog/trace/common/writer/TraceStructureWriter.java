@@ -63,7 +63,7 @@ public class TraceStructureWriter implements Writer {
             argsDebugLog = true;
             break;
           default:
-            log.warn("Illegal TraceStructureWriter argument '" + args[i] + "'");
+            log.warn("Illegal TraceStructureWriter argument '{}'", args[i]);
             break;
         }
       }

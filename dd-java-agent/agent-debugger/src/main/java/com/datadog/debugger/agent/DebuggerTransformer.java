@@ -101,10 +101,7 @@ public class DebuggerTransformer implements ClassFileTransformer {
                 }
               });
     } catch (IOException ex) {
-      log.warn(
-          "Error reading exclude file '{}' for Instrument-The-World. Exception: {}",
-          fileName,
-          ex.getMessage());
+      log.warn("Error reading exclude file '{}' for Instrument-The-World: ", fileName, ex);
     }
   }
 
@@ -270,7 +267,7 @@ public class DebuggerTransformer implements ClassFileTransformer {
     try {
       classNode.accept(writer);
     } catch (Throwable t) {
-      log.error("Cannot write classfile for class: {} Exception: ", classFilePath, t.getMessage());
+      log.error("Cannot write classfile for class: {}", classFilePath, t);
     }
     byte[] data = writer.toByteArray();
     dumpInstrumentedClassFile(classFilePath, data);

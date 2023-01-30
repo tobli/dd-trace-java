@@ -69,10 +69,7 @@ public final class Instrumenters implements Iterable<Instrumenter> {
               instrumenters[index] = nextType.getConstructor().newInstance();
               return true;
             } catch (Throwable e) {
-              log.error(
-                  "Failed to load - instrumentation.class={} Exception: {}",
-                  nextName,
-                  e.getMessage());
+              log.error("Failed to load - instrumentation.class={}", nextName, e);
               names[index] = null; // only attempt to load instrumenter once
             }
           }

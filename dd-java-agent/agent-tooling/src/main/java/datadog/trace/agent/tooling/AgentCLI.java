@@ -80,7 +80,7 @@ public final class AgentCLI {
         files.add(new FileInputStream(arg));
         new CrashUploader().upload(files);
       } catch (FileNotFoundException | SecurityException e) {
-        log.error("Failed to open {} Exception: ", arg, e.getMessage());
+        log.error("Failed to open {}", arg, e);
         System.exit(1);
       }
     }
@@ -128,7 +128,7 @@ public final class AgentCLI {
 
   private static void unzipJar(Consumer<File> invoker, File file) throws IOException {
     try (JarFile jar = new JarFile(file)) {
-      log.debug("Finding entries in file:" + file.getName());
+      log.debug("Finding entries in file: {}", file.getName());
 
       jar.stream()
           .forEach(

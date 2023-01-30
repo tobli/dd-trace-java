@@ -98,7 +98,7 @@ public class JsonSnapshotSerializer implements DebuggerContext.SnapshotSerialize
             VALUE_ADAPTER.fromJson(capturedValue.getStrValue());
         return String.valueOf(deserializedValue.getValue());
       } catch (Exception e) {
-        LOG.warn("Cannot deserialize {} Exception: {}" + name, e.getMessage());
+        LOG.warn("Cannot deserialize {}", name, e);
       }
     }
     return null;

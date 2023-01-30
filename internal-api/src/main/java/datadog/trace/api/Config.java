@@ -644,8 +644,7 @@ public class Config {
         tmpApiKey =
             new String(Files.readAllBytes(Paths.get(apiKeyFile)), StandardCharsets.UTF_8).trim();
       } catch (final IOException e) {
-        log.error(
-            "Cannot read API key from file {}, skipping. Exception {}", apiKeyFile, e.getMessage());
+        log.error("Cannot read API key from file {}, skipping", apiKeyFile, e);
       }
     }
     site = configProvider.getString(SITE, DEFAULT_SITE);
@@ -2153,7 +2152,9 @@ public class Config {
     return grpcClientErrorStatuses;
   }
 
-  /** @return A map of tags to be applied only to the local application root span. */
+  /**
+   * @return A map of tags to be applied only to the local application root span.
+   */
   public Map<String, Object> getLocalRootSpanTags() {
     final Map<String, String> runtimeTags = getRuntimeTags();
     final Map<String, Object> result = new HashMap<>(runtimeTags.size() + 1);

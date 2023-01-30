@@ -129,7 +129,7 @@ public class JMXFetch {
                 while (true) {
                   try {
                     final int result = app.run();
-                    log.error("jmx collector exited with result: " + result);
+                    log.error("jmx collector exited with result: {}", result);
                   } catch (final Exception e) {
                     log.error("Exception in jmx collector thread", e);
                   }

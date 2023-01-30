@@ -80,7 +80,7 @@ public final class AgentCLI {
         files.add(new FileInputStream(arg));
         new CrashUploader().upload(files);
       } catch (FileNotFoundException | SecurityException e) {
-        log.error("Failed to open {}", arg, e);
+        log.error("Failed to open {} Exception: ", arg, e.getMessage());
         System.exit(1);
       }
     }

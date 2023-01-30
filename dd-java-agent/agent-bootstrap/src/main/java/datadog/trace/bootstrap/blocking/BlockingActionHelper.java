@@ -252,7 +252,7 @@ public class BlockingActionHelper {
       log.warn("Template file {} could not be opened", f);
       return null;
     } catch (IOException e) {
-      log.warn("Error reading template file {}", f, e);
+      log.warn("Error reading template file {} Exception: {}", f, e.getMessage());
       return null;
     }
     return res;

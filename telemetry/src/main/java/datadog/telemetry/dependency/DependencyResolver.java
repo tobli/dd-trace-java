@@ -44,7 +44,7 @@ public class DependencyResolver {
         }
       }
     } catch (RuntimeException rte) {
-      log.debug("Failed to determine dependency for uri {}", uri, rte);
+      log.debug("Failed to determine dependency for uri {} Exception: {}", uri, rte.getMessage());
     }
     // TODO : moving jboss vfs here is probably a idea
     // it might however require to do somme checks to make sure it's only applied to jboss
@@ -82,7 +82,7 @@ public class DependencyResolver {
             Collections.singletonList(Dependency.guessFallbackNoPom(manifest, jar.getName(), is));
       }
     } catch (IOException e) {
-      log.debug("unable to read jar file {}", jar, e);
+      log.debug("unable to read jar file {} Exception: {}", jar, e.getMessage());
     }
 
     return dependencies;
@@ -111,7 +111,7 @@ public class DependencyResolver {
 
       return Dependency.guessFallbackNoPom(manifest, fileName, jarConnection.getInputStream());
     } catch (IOException e) {
-      log.debug("unable to open nested jar manifest for {}", uri, e);
+      log.debug("unable to open nested jar manifest for {} Exception: {}", uri, e.getMessage());
     }
     log.debug(
         "Unable to guess nested dependency for uri '{}', lastPart: '{}', fileName: '{}'",

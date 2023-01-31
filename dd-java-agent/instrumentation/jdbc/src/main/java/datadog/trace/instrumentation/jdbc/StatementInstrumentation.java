@@ -70,7 +70,7 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
     // performance.
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AgentScope onEnter(
-        @Advice.Argument(value = 0, readOnly = false) final String sql,
+        @Advice.Argument(value = 0, readOnly = false) String sql,
         @Advice.This final Statement statement) {
       // TODO consider matching known non-wrapper implementations to avoid this check
       final int callDepth = CallDepthThreadLocalMap.incrementCallDepth(Statement.class);
@@ -83,7 +83,6 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
         DECORATE.afterStart(span);
         DECORATE.onConnection(
             span, connection, InstrumentationContext.get(Connection.class, DBInfo.class));
-        String sqlText = sql;
         if (span != null && DECORATE.injectSQLComment()) { // TODO: add extra check
           SortedMap<String, Object> tags = new TreeMap<>();
           switch (SQL_COMMENT_INJECTION_MODE) {
@@ -94,9 +93,9 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
               tags = DECORATE.sortedKeyValuePairs(span, true);
               break;
           }
-          sqlText = DECORATE.augmentSQLStatement(sql, tags);
+          sql = DECORATE.augmentSQLStatement(sql, tags);
         }
-        DECORATE.onStatement(span, DBQueryInfo.ofStatement(sqlText));
+        DECORATE.onStatement(span, DBQueryInfo.ofStatement(sql));
         return activateSpan(span);
       } catch (SQLException e) {
         // if we can't get the connection for any reason

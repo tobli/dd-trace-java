@@ -579,7 +579,7 @@ public class Agent {
   private static synchronized void initializeJmxSystemAccessProvider(
       final ClassLoader classLoader) {
     if (log.isDebugEnabled()) {
-      log.debug("Initializing JMX system access provider for {}", classLoader.toString());
+      log.debug("Initializing JMX system access provider for {}", classLoader);
     }
     try {
       final Class<?> tracerInstallerClass =

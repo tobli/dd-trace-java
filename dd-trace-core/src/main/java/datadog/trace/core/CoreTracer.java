@@ -630,7 +630,7 @@ public class CoreTracer implements AgentTracer.TracerAPI {
         addTraceInterceptor(interceptor);
       }
     } catch (final ServiceConfigurationError e) {
-      log.warn("Problem loading TraceInterceptor for classLoader: {}", classLoader.toString(), e);
+      log.warn("Problem loading TraceInterceptor for classLoader: {}", classLoader, e);
     }
   }
 

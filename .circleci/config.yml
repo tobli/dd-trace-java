@@ -32,6 +32,18 @@ dependency_cache_paths: &dependency_cache_paths
     # Cached dependencies for sbt handled by coursier
     - ~/.cache/coursier
 
+latest_dependency_cache_keys: &latest_dependency_cache_keys
+  keys:
+    # New branch commits will find this cache
+    - dd-trace-java-latestdep-v1-{{ .Branch }}-{{ checksum "_circle_ci_cache_id" }}-
+    # New branches fall back on main build caches
+    - dd-trace-java-latestdep-v1-master-{{ checksum "_circle_ci_cache_base_id" }}-
+
+latest_dependency_cache_paths: &latest_dependency_cache_paths
+  paths:
+    # Cached dependencies and wrappers for gradle
+    - ~/.gradle
+
 build_cache_keys: &build_cache_keys
   keys:
     # Dependent steps will find this cache
@@ -362,6 +374,51 @@ jobs:
       - save_cache:
           key: dd-trace-java-build-v1-{{ .Branch }}-{{ checksum "_circle_ci_cache_id" }}-{{ epoch }}
           <<: *build_cache_paths
+
+      - display_memory_usage
+
+
+  build_clean_cache_latest:
+    <<: *defaults
+    resource_class: xlarge
+
+    steps:
+      - setup_code
+
+      - run:
+          name: Build Project
+          command: >-
+            MAVEN_OPTS="-Xms64M -Xmx256M"
+            GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx2G -Xms2G -XX:ErrorFile=/tmp/hs_err_pid%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp'"
+            ./gradlew clean latestDepTest -PskipTests
+            << pipeline.parameters.gradle_flags >>
+            --max-workers=8
+            --rerun-tasks
+
+      - run:
+          name: Collect Libs
+          when: always
+          command: .circleci/collect_libs.sh
+
+      - store_artifacts:
+          path: ./libs
+
+      - run:
+          name: Collect reports
+          when: on_fail
+          command: .circleci/collect_reports.sh --destination ./check_reports --move
+
+      - run:
+          name: Delete reports
+          when: on_success
+          command: .circleci/collect_reports.sh --destination ./check_reports --delete
+
+      - store_artifacts:
+          path: ./check_reports
+
+      - save_cache:
+          key: dd-trace-java-latestdep-v1-{{ .Branch }}-{{ checksum "_circle_ci_cache_id" }}-{{ epoch }}
+          <<: *latest_dependency_cache_paths
 
       - display_memory_usage
 
@@ -984,14 +1041,15 @@ workflows:
       *build_test_jobs
 
   weekly:
-    triggers:
-      - schedule:
-          # Run this job at 00:05 UTC every Monday
-          cron: "5 0 * * 1"
-          filters:
-            branches:
-              only:
-                - master
+    #triggers:
+    #  - schedule:
+    #      # Run this job at 00:05 UTC every Monday
+    #      cron: "5 0 * * 1"
+    #      filters:
+    #        branches:
+    #          only:
+    #            - master
     jobs:
       # This will rebuild a main cache with a new timestamp from a clean slate
       - build_clean_cache
+      - build_clean_cache_latest

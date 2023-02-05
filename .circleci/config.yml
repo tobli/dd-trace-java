@@ -390,7 +390,7 @@ jobs:
           command: >-
             MAVEN_OPTS="-Xms64M -Xmx256M"
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx2G -Xms2G -XX:ErrorFile=/tmp/hs_err_pid%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp'"
-            ./gradlew clean latestDepTest -PskipTests
+            ./gradlew clean :dd-trace-java:instrumentation:latestDepTest -PskipTests
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
             --rerun-tasks
@@ -467,11 +467,22 @@ jobs:
       - skip_unless_matching_files_changed:
           pattern: << parameters.triggeredBy >>
 
-      - restore_cache:
-          <<: *dependency_cache_keys
+      - when:
+          condition:
+            not:
+              equal: ["latestDepTest", << parameters.testTask >>]
+          steps:
+            - restore_cache:
+                <<: *dependency_cache_keys
+            - restore_cache:
+                <<: *build_cache_keys
 
-      - restore_cache:
-          <<: *build_cache_keys
+      - when:
+          condition:
+            equal: ["latestDepTest", << parameters.testTask >>]
+          steps:
+            - restore_cache:
+                <<: *latest_dependency_cache_keys
 
       - when:
           condition:
@@ -805,8 +816,6 @@ build_test_jobs: &build_test_jobs
       testJvm: "8"
 
   - xlarge_tests:
-      requires:
-        - ok_to_test
       name: test_8_inst_latest
       testTask: latestDepTest
       gradleTarget: ":dd-java-agent:instrumentation"
@@ -1041,14 +1050,14 @@ workflows:
       *build_test_jobs
 
   weekly:
-    #triggers:
-    #  - schedule:
-    #      # Run this job at 00:05 UTC every Monday
-    #      cron: "5 0 * * 1"
-    #      filters:
-    #        branches:
-    #          only:
-    #            - master
+    triggers:
+      - schedule:
+          # Run this job at 00:05 UTC every Monday
+          cron: "5 0 * * 1"
+          filters:
+            branches:
+              only:
+                - master
     jobs:
       # This will rebuild a main cache with a new timestamp from a clean slate
       - build_clean_cache

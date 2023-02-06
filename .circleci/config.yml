@@ -222,7 +222,7 @@ jobs:
           command: >-
             MAVEN_OPTS="-Xms64M -Xmx256M"
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx2G -Xms2G -XX:ErrorFile=/tmp/hs_err_pid%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp'"
-            ./gradlew clean compile shadowJar test -PskipTests -PskipBuildSrcTest
+            ./gradlew clean shadowJar test -PskipTests -PskipBuildSrcTest
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
             --rerun-tasks
@@ -341,7 +341,7 @@ jobs:
           command: >-
             MAVEN_OPTS="-Xms64M -Xmx256M"
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx2G -Xms2G -XX:ErrorFile=/tmp/hs_err_pid%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp'"
-            ./gradlew clean compile shadowJar check -PskipTests
+            ./gradlew clean shadowJar check -PskipTests
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
             --rerun-tasks

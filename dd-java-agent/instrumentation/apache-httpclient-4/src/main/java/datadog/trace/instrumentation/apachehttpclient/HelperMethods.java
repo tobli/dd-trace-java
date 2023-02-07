@@ -8,7 +8,6 @@ import static datadog.trace.instrumentation.apachehttpclient.ApacheHttpClientDec
 import static datadog.trace.instrumentation.apachehttpclient.HttpHeadersInjectAdapter.SETTER;
 
 import datadog.trace.api.Config;
-import datadog.trace.api.TracePropagationStyle;
 import datadog.trace.bootstrap.CallDepthThreadLocalMap;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
@@ -40,9 +39,8 @@ public class HelperMethods {
       propagate()
           .injectPathwayContext(
               span, request, SETTER, HttpClientDecorator.CLIENT_PATHWAY_EDGE_TAGS);
-    } else if (Config.get().isAwsPropagationEnabled()) {
-      propagate().inject(span, request, SETTER, TracePropagationStyle.XRAY);
     }
+
     return scope;
   }
 

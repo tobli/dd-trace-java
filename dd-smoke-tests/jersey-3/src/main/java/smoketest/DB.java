@@ -1,5 +1,6 @@
 package smoketest;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -12,6 +13,7 @@ public class DB {
     DB.store("pepe");
   }
 
+  @SuppressFBWarnings
   public static void store(String value) throws SQLException {
     try (Connection conn = DriverManager.getConnection("jdbc:h2:mem:test_mem");
         Statement st = conn.createStatement()) {

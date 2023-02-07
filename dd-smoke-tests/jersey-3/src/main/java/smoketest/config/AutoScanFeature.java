@@ -3,16 +3,15 @@ package smoketest.config;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.glassfish.hk2.api.DynamicConfigurationService;
 import org.glassfish.hk2.api.MultiException;
 import org.glassfish.hk2.api.Populator;
 import org.glassfish.hk2.api.ServiceLocator;
 import org.glassfish.hk2.utilities.ClasspathDescriptorFileFinder;
 import org.glassfish.hk2.utilities.DuplicatePostProcessor;
-
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /* Auto scan the jax-rx @Contract and @Service  */
 public class AutoScanFeature implements Feature {

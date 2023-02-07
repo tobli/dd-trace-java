@@ -1,18 +1,15 @@
 package smoketest;
 
-import com.sun.org.apache.bcel.internal.generic.Type;
 import jakarta.ws.rs.ext.ParamConverter;
-import org.glassfish.jersey.internal.inject.ParamConverters;
-import org.glassfish.jersey.internal.inject.ParamConverters.StringConstructor;
-import smoketest.config.AutoScanFeature;
-import smoketest.resource.MyResource;
-import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
-
 import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
+import org.glassfish.jersey.internal.inject.ParamConverters.StringConstructor;
+import org.glassfish.jersey.server.ResourceConfig;
+import smoketest.config.AutoScanFeature;
+import smoketest.resource.MyResource;
 
 public class MainApp {
   public static final byte[] debugMarker = "debugmarker".getBytes();

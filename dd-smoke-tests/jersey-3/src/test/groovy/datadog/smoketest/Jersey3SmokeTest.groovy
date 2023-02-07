@@ -78,6 +78,52 @@ class Jersey3SmokeTest extends AbstractServerSmokeTest {
     assert sqlInjectionFound
   }
 
+  def "Test header in Jersey"() {
+    setup:
+    def url = "http://localhost:${httpPort}/hello/byheader"
+    boolean sqlInjectionFound = false
+
+    when:
+    def request = new Request.Builder().url(url).header("X-Custom-header", "pepito").get().build()
+    def response = client.newCall(request).execute()
+    checkLog {
+      if (it.contains("SQL_INJECTION") && it.contains("smoketest.DB") && it.contains("pepito")) {
+        sqlInjectionFound = true
+      }
+    }
+
+    then:
+    String body = response.body().string()
+    assert body != null
+    assert response.body().contentType().toString().contains("text/plain")
+    assert body.contains("Jersey: hello pepito")
+    assert response.code() == 200
+    assert sqlInjectionFound
+  }
+
+  def "Test cookie in Jersey"() {
+    setup:
+    def url = "http://localhost:${httpPort}/hello/bycookie"
+    boolean sqlInjectionFound = false
+
+    when:
+    def request = new Request.Builder().url(url).addHeader("Cookie", "cookieName=cookieValue").get().build()
+    def response = client.newCall(request).execute()
+    checkLog {
+      if (it.contains("SQL_INJECTION") && it.contains("smoketest.DB") && it.contains("cookieValue")) {
+        sqlInjectionFound = true
+      }
+    }
+
+    then:
+    String body = response.body().string()
+    assert body != null
+    assert response.body().contentType().toString().contains("text/plain")
+    assert body.contains("Jersey: hello cookieValue")
+    assert response.code() == 200
+    assert sqlInjectionFound
+  }
+
   private static String withSystemProperty(final String config, final Object value) {
     return "-Ddd.${config}=${value}"
   }

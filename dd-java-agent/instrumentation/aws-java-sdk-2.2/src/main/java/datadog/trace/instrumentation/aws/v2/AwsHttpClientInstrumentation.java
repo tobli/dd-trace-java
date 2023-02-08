@@ -5,6 +5,7 @@ import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.nameSta
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.named;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.AWS_HTTP;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 
@@ -62,7 +63,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     public static boolean methodEnter(@Advice.This final Object thiz) {
       if (thiz instanceof MakeAsyncHttpRequestStage) {
         final AgentScope scope = activeScope();
-        if (scope != null) {
+        if (scope != null && AWS_HTTP == scope.span().getOperationName()) {
           scope.close();
           return true;
         }
@@ -74,7 +75,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
     public static void methodExit(@Advice.Enter final boolean scopeAlreadyClosed) {
       if (!scopeAlreadyClosed) {
         final AgentScope scope = activeScope();
-        if (scope != null) {
+        if (scope != null && AWS_HTTP == scope.span().getOperationName()) {
           scope.close();
         }
       }

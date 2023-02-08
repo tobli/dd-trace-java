@@ -1,10 +1,9 @@
 package datadog.trace.instrumentation.aws.v0;
 
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateNext;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
-import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.closePrevious;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.propagate;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.startSpan;
+import static datadog.trace.instrumentation.aws.v0.AwsSdkClientDecorator.AWS_HTTP;
 import static datadog.trace.instrumentation.aws.v0.AwsSdkClientDecorator.DECORATE;
 
 import com.amazonaws.AmazonWebServiceRequest;
@@ -16,7 +15,6 @@ import datadog.trace.api.Config;
 import datadog.trace.api.TracePropagationStyle;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
-import datadog.trace.bootstrap.instrumentation.api.UTF8BytesString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +25,10 @@ public class TracingRequestHandler extends RequestHandler2 {
   public static final HandlerContextKey<AgentScope> SCOPE_CONTEXT_KEY =
       new HandlerContextKey<>("DatadogScope"); // same as OnErrorDecorator.SCOPE_CONTEXT_KEY
 
-  private static final CharSequence AWS_HTTP = UTF8BytesString.create("aws.http");
-
   private static final Logger log = LoggerFactory.getLogger(TracingRequestHandler.class);
+
+  private static final boolean isLegacyAwsTracing =
+      Config.get().isLegacyTracingEnabled(false, "aws-sdk");
 
   @Override
   public AmazonWebServiceRequest beforeMarshalling(final AmazonWebServiceRequest request) {
@@ -38,16 +37,13 @@ public class TracingRequestHandler extends RequestHandler2 {
 
   @Override
   public void beforeRequest(final Request<?> request) {
-    boolean isPolling = isPollingRequest(request.getOriginalRequest());
-    if (isPolling) {
-      closePrevious(true);
+    if (!isLegacyAwsTracing && isPollingRequest(request.getOriginalRequest())) {
+      return; // will be handled by aws-java-sqs-1.0
     }
+
     final AgentSpan span = startSpan(AWS_HTTP);
     DECORATE.afterStart(span);
     DECORATE.onRequest(span, request);
-    if (isPolling) {
-      activateNext(span); // this scope will last until next poll
-    }
     request.addHandlerContext(SCOPE_CONTEXT_KEY, activateSpan(span));
     if (Config.get().isAwsPropagationEnabled()) {
       try {
@@ -66,11 +62,7 @@ public class TracingRequestHandler extends RequestHandler2 {
       DECORATE.onResponse(scope.span(), response);
       DECORATE.beforeFinish(scope.span());
       scope.close();
-      if (isPollingRequest(request.getOriginalRequest())) {
-        // will be finished on next poll
-      } else {
-        scope.span().finish();
-      }
+      scope.span().finish();
     }
   }
 
@@ -82,11 +74,7 @@ public class TracingRequestHandler extends RequestHandler2 {
       DECORATE.onError(scope.span(), e);
       DECORATE.beforeFinish(scope.span());
       scope.close();
-      if (isPollingRequest(request.getOriginalRequest())) {
-        // will be finished on next poll
-      } else {
-        scope.span().finish();
-      }
+      scope.span().finish();
     }
   }
 

@@ -2,6 +2,7 @@ package datadog.trace.instrumentation.servlet3;
 
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator.DD_DISPATCH_SPAN_ATTRIBUTE;
+import static datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator.DD_FIN_DISP_LIST_SPAN_ATTRIBUTE;
 import static datadog.trace.bootstrap.instrumentation.decorator.HttpServerDecorator.DD_SPAN_ATTRIBUTE;
 import static datadog.trace.instrumentation.servlet3.Servlet3Decorator.DECORATE;
 
@@ -103,31 +104,42 @@ public class Servlet3Advice {
       return;
     }
 
+    if (isDispatch) {
+      AgentSpan dispatchSpan = scope.span();
+      FinishAsyncDispatchListener asyncListener =
+          new FinishAsyncDispatchListener(dispatchSpan, false);
+      // Jetty doesn't always call the listener, if the request ends before
+      request.setAttribute(DD_FIN_DISP_LIST_SPAN_ATTRIBUTE, asyncListener);
+      try {
+        request.getAsyncContext().addListener(asyncListener);
+      } catch (IllegalStateException iae) {
+        // we can't add the listener. Rely only on DD_FIN_DISP_LIST_SPAN_ATTRIBUTE
+      }
+      scope.close();
+      return; // finishing happens on the already registered FixedAsyncDispatchListener
+    }
+
     if (request instanceof HttpServletRequest && response instanceof HttpServletResponse) {
-      final HttpServletRequest req = (HttpServletRequest) request;
       final HttpServletResponse resp = (HttpServletResponse) response;
 
       final AgentSpan span = scope.span();
 
       if (throwable != null) {
-        if (!isDispatch) {
-          // We don't want to put the status on the dispatch span.
-          // (It might be wrong/different from the server span with an exception handler.)
-          DECORATE.onResponse(span, resp);
-          if (resp.getStatus() == HttpServletResponse.SC_OK) {
-            // exception is thrown in filter chain, but status code is likely incorrect
-            span.setHttpStatusCode(500);
-          }
+        DECORATE.onResponse(span, resp);
+        if (resp.getStatus() == HttpServletResponse.SC_OK) {
+          // exception is thrown in filter chain, but status code is likely incorrect
+          span.setHttpStatusCode(500);
         }
         DECORATE.onError(span, throwable);
         DECORATE.beforeFinish(span);
         span.finish(); // Finish the span manually since finishSpanOnClose was false
       } else {
-        final AtomicBoolean activated = new AtomicBoolean(false);
+        final HttpServletRequest req = (HttpServletRequest) request;
+        final AtomicBoolean activated = new AtomicBoolean();
         if (req.isAsyncStarted()) {
           try {
             req.getAsyncContext()
-                .addListener(new TagSettingAsyncListener(activated, span, isDispatch));
+                .addListener(new FinishAsyncDispatchListener(span, activated, true));
           } catch (final IllegalStateException e) {
             // org.eclipse.jetty.server.Request may throw an exception here if request became
             // finished after check above. We just ignore that exception and move on.
@@ -135,13 +147,10 @@ public class Servlet3Advice {
         }
         // Check again in case the request finished before adding the listener.
         if (!req.isAsyncStarted() && activated.compareAndSet(false, true)) {
-          if (!isDispatch) {
-            DECORATE.onResponse(span, resp);
-          }
+          DECORATE.onResponse(span, resp);
           DECORATE.beforeFinish(span);
           span.finish(); // Finish the span manually since finishSpanOnClose was false
         }
-        // else span finished in TagSettingAsyncListener
       }
       scope.close();
     }

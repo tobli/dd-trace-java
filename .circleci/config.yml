@@ -390,7 +390,7 @@ jobs:
           command: >-
             MAVEN_OPTS="-Xms64M -Xmx256M"
             GRADLE_OPTS="-Dorg.gradle.jvmargs='-Xmx2G -Xms2G -XX:ErrorFile=/tmp/hs_err_pid%p.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp'"
-            ./gradlew clean :dd-trace-java:instrumentation:latestDepTest -PskipTests
+            ./gradlew clean :dd-java-agent:instrumentation:latestDepTest -PskipTests
             << pipeline.parameters.gradle_flags >>
             --max-workers=8
             --rerun-tasks
@@ -1050,14 +1050,14 @@ workflows:
       *build_test_jobs
 
   weekly:
-    triggers:
-      - schedule:
-          # Run this job at 00:05 UTC every Monday
-          cron: "5 0 * * 1"
-          filters:
-            branches:
-              only:
-                - master
+    #triggers:
+    #  - schedule:
+    #      # Run this job at 00:05 UTC every Monday
+    #      cron: "5 0 * * 1"
+    #      filters:
+    #        branches:
+    #          only:
+    #            - master
     jobs:
       # This will rebuild a main cache with a new timestamp from a clean slate
       - build_clean_cache

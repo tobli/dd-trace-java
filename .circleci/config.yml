@@ -214,11 +214,8 @@ jobs:
     steps:
       - setup_code
 
-      - restore_cache:
-          <<: *dependency_cache_keys
-
-      - restore_cache:
-          <<: *build_cache_keys
+      - restore_dependency_cache:
+          cacheType: dep
 
       - run:
           name: Build Project
@@ -297,12 +294,8 @@ jobs:
 
     steps:
       - setup_code
-
-      - restore_cache:
-          <<: *dependency_cache_keys
-
-      - restore_cache:
-          <<: *build_cache_keys
+      - restore_dependency_cache
+      - restore_build_cache
 
       - run:
           name: Check Project
@@ -416,6 +409,9 @@ jobs:
       continueOnFailure:
         type: boolean
         default: false
+      cacheType:
+        type: string
+        default: dep
 
     steps:
       - setup_code
@@ -423,22 +419,9 @@ jobs:
       - skip_unless_matching_files_changed:
           pattern: << parameters.triggeredBy >>
 
-      - when:
-          condition:
-            not:
-              equal: ["latestDepTest", << parameters.testTask >>]
-          steps:
-            - restore_cache:
-                <<: *dependency_cache_keys
-            - restore_cache:
-                <<: *build_cache_keys
-
-      - when:
-          condition:
-            equal: ["latestDepTest", << parameters.testTask >>]
-          steps:
-            - restore_cache:
-                <<: *latest_dependency_cache_keys
+      - restore_dependency_cache:
+          cacheType: << parameters.cacheType >>
+      - restore_build_cache
 
       - when:
           condition:
@@ -599,11 +582,9 @@ jobs:
       # downloading the artifacts each time.
       #
       # Let's at least restore the build cache to have something to start from.
-      - restore_cache:
-          <<: *dependency_cache_keys
-
-      - restore_cache:
-          <<: *build_cache_keys
+      - restore_dependency_cache:
+          cacheType: dep
+      - restore_build_cache
 
       - run:
           name: Gather muzzle tasks
@@ -646,12 +627,6 @@ jobs:
     steps:
 
       - setup_code
-
-      - restore_cache:
-          <<: *dependency_cache_keys
-
-      - restore_cache:
-          <<: *build_cache_keys
 
       - run:
           name: Install good version of docker-compose
@@ -756,6 +731,7 @@ build_test_jobs: &build_test_jobs
       gradleParameters: "-PskipFlakyTests"
       triggeredBy: *instrumentation_modules
       stage: instrumentation
+      cacheType: inst
       maxWorkers: 8
       matrix:
         <<: *test_matrix
@@ -768,6 +744,7 @@ build_test_jobs: &build_test_jobs
       gradleParameters: "-PskipFlakyTests"
       triggeredBy: *instrumentation_modules
       stage: instrumentation
+      cacheType: inst
       maxWorkers: 8
       testJvm: "8"
 
@@ -778,6 +755,7 @@ build_test_jobs: &build_test_jobs
       gradleParameters: "-PskipFlakyTests"
       triggeredBy: *instrumentation_modules
       stage: instrumentation
+      cacheType: latestdep
       maxWorkers: 8
       testJvm: "8"
 
@@ -835,6 +813,7 @@ build_test_jobs: &build_test_jobs
       gradleTarget: "stageMainDist :dd-smoke-test"
       gradleParameters: "-PskipFlakyTests"
       stage: smoke
+      cacheType: smoke
       maxWorkers: 8
       matrix:
         <<: *test_matrix
@@ -846,6 +825,7 @@ build_test_jobs: &build_test_jobs
       gradleTarget: "stageMainDist :dd-smoke-test"
       gradleParameters: "-PskipFlakyTests"
       stage: smoke
+      cacheType: smoke
       maxWorkers: 8
       testJvm: "IBM11"
 
@@ -856,6 +836,7 @@ build_test_jobs: &build_test_jobs
       gradleTarget: "stageMainDist :dd-smoke-test"
       gradleParameters: "-PskipFlakyTests"
       stage: smoke
+      cacheType: smoke
       maxWorkers: 8
       testJvm: "IBM17"
 
@@ -865,6 +846,7 @@ build_test_jobs: &build_test_jobs
       name: test_GRAALVM11_smoke
       gradleTarget: "stageMainDist :dd-smoke-test:spring-native"
       stage: smoke
+      cacheType: smoke
       testJvm: "GRAALVM11"
 
   - xlarge_tests:
@@ -873,6 +855,7 @@ build_test_jobs: &build_test_jobs
       name: test_GRAALVM17_smoke
       gradleTarget: "stageMainDist :dd-smoke-test:spring-native"
       stage: smoke
+      cacheType: smoke
       testJvm: "GRAALVM17"
 
 
@@ -883,6 +866,7 @@ build_test_jobs: &build_test_jobs
       gradleTarget: "stageMainDist :dd-smoke-test"
       gradleParameters: "-PskipFlakyTests"
       stage: smoke
+      cacheType: smoke
       maxWorkers: 8
       testJvm: "8"
 

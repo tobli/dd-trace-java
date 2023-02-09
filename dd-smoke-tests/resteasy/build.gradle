@@ -28,5 +28,3 @@ tasks.withType(Test).configureEach {
   dependsOn "shadowJar"
   jvmArgs "-Ddatadog.smoketest.resteasy.jar.path=${tasks.shadowJar.archivePath}"
 }
-
-

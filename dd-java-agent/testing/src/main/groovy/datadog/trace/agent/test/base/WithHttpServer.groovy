@@ -15,9 +15,10 @@ abstract class WithHttpServer<SERVER> extends AgentTestRunner {
 
   @Shared
   @Subject
-  HttpServer server = server()
+  HttpServer server
   @Shared
   OkHttpClient client = OkHttpUtils.client(15, 15, TimeUnit.SECONDS)
+
   @Shared
   URI address = null
 
@@ -57,6 +58,7 @@ abstract class WithHttpServer<SERVER> extends AgentTestRunner {
   }
 
   def setupSpec() {
+    server = server()
     server.start()
     address = server.address()
     assert address.port > 0

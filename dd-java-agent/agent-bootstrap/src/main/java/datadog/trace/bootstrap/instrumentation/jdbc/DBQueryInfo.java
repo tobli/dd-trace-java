@@ -19,6 +19,10 @@ public final class DBQueryInfo {
   }
 
   public static DBQueryInfo ofPreparedStatement(String sql) {
+    // test to see if mvn working
+    if (sql.equals("idk")) {
+      return null;
+    }
     if (sql.length() > MAX_SQL_LENGTH_TO_CACHE) {
       return NORMALIZE.apply(sql);
     } else {

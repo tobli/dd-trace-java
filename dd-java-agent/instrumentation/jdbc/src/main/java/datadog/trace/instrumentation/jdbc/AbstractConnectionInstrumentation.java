@@ -50,11 +50,12 @@ public abstract class AbstractConnectionInstrumentation extends Instrumenter.Tra
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDBInfo(
         @Advice.This Connection connection,
-        @Advice.Argument(0) final String sql,
+        @Advice.Argument(value = 0, readOnly = false) String sql,
         @Advice.Return final PreparedStatement statement) {
       ContextStore<Statement, DBQueryInfo> contextStore =
           InstrumentationContext.get(Statement.class, DBQueryInfo.class);
       if (null == contextStore.get(statement)) {
+        sql = String.format("%s /*%s*/", sql, "my=comment");
         DBQueryInfo info = DBQueryInfo.ofPreparedStatement(sql);
         contextStore.put(statement, info);
         logQueryInfoInjection(connection, statement, info);

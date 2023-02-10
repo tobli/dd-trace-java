@@ -83,7 +83,7 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
         DECORATE.afterStart(span);
         DECORATE.onConnection(
             span, connection, InstrumentationContext.get(Connection.class, DBInfo.class));
-        if (span != null && DECORATE.injectSQLComment()) { // TODO: add extra check
+        if (span != null && DECORATE.injectSQLComment()) {
           SortedMap<String, Object> tags = new TreeMap<>();
           switch (SQL_COMMENT_INJECTION_MODE) {
             case SQL_COMMENT_INJECTION_STATIC:

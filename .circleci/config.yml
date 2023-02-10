@@ -366,7 +366,7 @@ jobs:
       - store_artifacts:
           path: ./check_reports
 
-      - save_cache:
+      - save_dependency_cache:
           cacheType: << parameters.cacheType >>
 
       - display_memory_usage

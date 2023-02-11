@@ -132,3 +132,22 @@ tasks.register('writeMuzzleTasksToFile') {
     .join('\n')
   }
 }
+
+def testAggregate(String taskName, includePrefixes, excludePrefixes) {
+  tasks.register(taskName) { aggTest ->
+    subprojects { subproject ->
+      println(subproject.path)
+      if (includePrefixes.any { subproject.path.startsWith(it) } && !excludePrefixes.any { subproject.path.startsWith(it) }) {
+        def testTask = subproject.tasks.findByName("test")
+        if (testTask != null) {
+          aggTest.dependsOn(testTask)
+        }
+      }
+    }
+  }
+}
+
+testAggregate("smokeTest", [":dd-smoke-tests"], [])
+testAggregate("instrumentationTest", [":dd-java-agent:instrumentation"], [])
+testAggregate("profilingTest", [":dd-java-agent:agent-profiling"], [])
+testAggregate("baseTest", [":"], [":dd-java-agent:instrumentation", ":dd-smoke-tests", ":dd-java-agent:agent-profiling"])

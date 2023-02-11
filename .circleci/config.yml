@@ -745,6 +745,8 @@ build_test_jobs: &build_test_jobs
       testJvm: "8"
 
   - xlarge_tests:
+      requires:
+        - ok_to_test
       name: test_8_inst_latest
       testTask: latestDepTest
       gradleTarget: ":dd-java-agent:instrumentation"

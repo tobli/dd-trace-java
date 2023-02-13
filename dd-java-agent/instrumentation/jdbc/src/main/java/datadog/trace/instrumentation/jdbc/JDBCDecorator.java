@@ -12,6 +12,7 @@ import datadog.trace.bootstrap.instrumentation.decorator.DatabaseClientDecorator
 import datadog.trace.bootstrap.instrumentation.jdbc.DBInfo;
 import datadog.trace.bootstrap.instrumentation.jdbc.DBQueryInfo;
 import datadog.trace.bootstrap.instrumentation.jdbc.JDBCConnectionUrlParser;
+
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
@@ -20,6 +21,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +73,7 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
 
   @Override
   protected String[] instrumentationNames() {
-    return new String[] {"jdbc"};
+    return new String[]{"jdbc"};
   }
 
   @Override
@@ -174,6 +176,8 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   }
 
   public AgentSpan onStatement(AgentSpan span, DBQueryInfo dbQueryInfo) {
+    log.info("Making span on statement with sql: " + span.getResourceName().toString());
+    log.info("DB query info sql: " + dbQueryInfo.getSql().toString());
     return withQueryInfo(span, dbQueryInfo, JDBC_STATEMENT);
   }
 
@@ -191,7 +195,9 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     return span.setTag(Tags.COMPONENT, component);
   }
 
-  /** For customers who elect to enable SQL comment injection */
+  /**
+   * For customers who elect to enable SQL comment injection
+   */
   public boolean injectSQLComment() {
     return SQL_COMMENT_INJECTION_MODE.equals(SQL_COMMENT_INJECTION_FULL)
         || SQL_COMMENT_INJECTION_MODE.equals(SQL_COMMENT_INJECTION_STATIC);

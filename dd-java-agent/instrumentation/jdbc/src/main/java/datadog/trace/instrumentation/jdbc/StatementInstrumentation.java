@@ -18,19 +18,25 @@ import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.jdbc.DBInfo;
 import datadog.trace.bootstrap.instrumentation.jdbc.DBQueryInfo;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
+
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @AutoService(Instrumenter.class)
 public final class StatementInstrumentation extends Instrumenter.Tracing
     implements Instrumenter.ForBootstrap, Instrumenter.ForTypeHierarchy {
+  private static final Logger log = LoggerFactory.getLogger(StatementInstrumentation.class);
 
   public StatementInstrumentation() {
     super("jdbc");
@@ -53,8 +59,8 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JDBCDecorator",
+    return new String[]{
+        packageName + ".JDBCDecorator",
     };
   }
 
@@ -95,9 +101,13 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
 //          }
 //          sql = DECORATE.augmentSQLStatement(sql, tags);
 //        }
-        SortedMap<String, Object> tags = new TreeMap<>();
-        tags = DECORATE.sortedKeyValuePairs(span, true);
+        final SortedMap<String, Object> tags = DECORATE.sortedKeyValuePairs(span, true);
+        String tagString = tags.keySet().stream()
+            .map(key -> key + "=" + tags.get(key))
+            .collect(Collectors.joining(", ", "{", "}"));
+        log.info("Tags: " + tagString);
         sql = DECORATE.augmentSQLStatement(sql, tags);
+        log.info("SQL: " + sql);
         DECORATE.onStatement(span, DBQueryInfo.ofStatement(sql));
         return activateSpan(span);
       } catch (SQLException e) {

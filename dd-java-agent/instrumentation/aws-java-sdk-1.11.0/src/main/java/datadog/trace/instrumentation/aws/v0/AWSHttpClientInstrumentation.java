@@ -1,8 +1,10 @@
 package datadog.trace.instrumentation.aws.v0;
 
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.named;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.noopSpan;
 import static datadog.trace.instrumentation.aws.v0.OnErrorDecorator.DECORATE;
-import static datadog.trace.instrumentation.aws.v0.OnErrorDecorator.SCOPE_CONTEXT_KEY;
+import static datadog.trace.instrumentation.aws.v0.OnErrorDecorator.SPAN_CONTEXT_KEY;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 
 import com.amazonaws.AmazonClientException;
@@ -10,6 +12,7 @@ import com.amazonaws.Request;
 import com.amazonaws.handlers.RequestHandler2;
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.Config;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import net.bytebuddy.asm.Advice;
@@ -42,6 +45,9 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Tracing
     transformation.applyAdvice(
         isMethod().and(named("doExecute")),
         AWSHttpClientInstrumentation.class.getName() + "$HttpClientAdvice");
+    transformation.applyAdvice(
+        isMethod().and(named("executeHelper")),
+        AWSHttpClientInstrumentation.class.getName() + "$ControlPropagation");
   }
 
   public static class HttpClientAdvice {
@@ -50,16 +56,35 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Tracing
         @Advice.Argument(value = 0, optional = true) final Request<?> request,
         @Advice.Thrown final Throwable throwable) {
       if (throwable != null) {
-        final AgentScope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-        if (scope != null) {
-          request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
-          final AgentSpan span = scope.span();
+        final AgentSpan span = request.getHandlerContext(SPAN_CONTEXT_KEY);
+        if (span != null) {
+          request.addHandlerContext(SPAN_CONTEXT_KEY, null);
           DECORATE.onError(span, throwable);
           DECORATE.beforeFinish(span);
-          scope.close();
           span.finish();
         }
       }
+    }
+  }
+
+  public static class ControlPropagation {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AgentScope methodEnter(
+        @Advice.Argument(value = 0, optional = true) final Request<?> request) {
+      if (Config.get().isLegacyTracingEnabled(false, "aws-sdk")) {
+        if (request != null) {
+          final AgentSpan span = request.getHandlerContext(SPAN_CONTEXT_KEY);
+          if (span != null) {
+            return activateSpan(span);
+          }
+        }
+      }
+      return activateSpan(noopSpan());
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(@Advice.Enter final AgentScope scope) {
+      scope.close();
     }
   }
 
@@ -85,6 +110,9 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Tracing
       transformation.applyAdvice(
           isMethod().and(named("doExecute")),
           RequestExecutorInstrumentation.class.getName() + "$RequestExecutorAdvice");
+      transformation.applyAdvice(
+          isMethod().and(named("executeHelper")),
+          RequestExecutorInstrumentation.class.getName() + "$ControlPropagation");
     }
 
     public static class RequestExecutorAdvice {
@@ -93,16 +121,34 @@ public class AWSHttpClientInstrumentation extends Instrumenter.Tracing
           @Advice.FieldValue("request") final Request<?> request,
           @Advice.Thrown final Throwable throwable) {
         if (throwable != null) {
-          final AgentScope scope = request.getHandlerContext(SCOPE_CONTEXT_KEY);
-          if (scope != null) {
-            request.addHandlerContext(SCOPE_CONTEXT_KEY, null);
-            final AgentSpan span = scope.span();
+          final AgentSpan span = request.getHandlerContext(SPAN_CONTEXT_KEY);
+          if (span != null) {
+            request.addHandlerContext(SPAN_CONTEXT_KEY, null);
             DECORATE.onError(span, throwable);
             DECORATE.beforeFinish(span);
-            scope.close();
             span.finish();
           }
         }
+      }
+    }
+
+    public static class ControlPropagation {
+      @Advice.OnMethodEnter(suppress = Throwable.class)
+      public static AgentScope methodEnter(@Advice.FieldValue("request") final Request<?> request) {
+        if (Config.get().isLegacyTracingEnabled(false, "aws-sdk")) {
+          if (request != null) {
+            final AgentSpan span = request.getHandlerContext(SPAN_CONTEXT_KEY);
+            if (span != null) {
+              return activateSpan(span);
+            }
+          }
+        }
+        return activateSpan(noopSpan());
+      }
+
+      @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+      public static void methodExit(@Advice.Enter final AgentScope scope) {
+        scope.close();
       }
     }
   }

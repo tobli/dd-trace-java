@@ -4,13 +4,16 @@ import static datadog.trace.agent.tooling.bytebuddy.matcher.HierarchyMatchers.ex
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.nameStartsWith;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.named;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.noopSpan;
 import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.AWS_HTTP;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 
 import com.google.auto.service.AutoService;
 import datadog.trace.agent.tooling.Instrumenter;
+import datadog.trace.api.Config;
 import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -48,7 +51,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
   }
 
   public static class AwsHttpClientAdvice {
-    // scope.close here doesn't actually close the span.
+    // scope.close here doesn't actually finish the span.
 
     /**
      * FIXME: This is a hack to prevent netty instrumentation from messing things up.
@@ -60,25 +63,23 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
      * stored in channel attributes.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean methodEnter(@Advice.This final Object thiz) {
-      if (thiz instanceof MakeAsyncHttpRequestStage) {
+    public static AgentScope methodEnter(@Advice.This final Object thiz) {
+      if (Config.get().isLegacyTracingEnabled(false, "aws-sdk")) {
         final AgentScope scope = activeScope();
-        if (scope != null && AWS_HTTP == scope.span().getOperationName()) {
-          scope.close();
-          return true;
+        if (scope != null && AWS_HTTP == scope.span().getSpanName()) {
+          if (thiz instanceof MakeAsyncHttpRequestStage) {
+            scope.close();
+          } else {
+            return scope;
+          }
         }
       }
-      return false;
+      return activateSpan(noopSpan());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Enter final boolean scopeAlreadyClosed) {
-      if (!scopeAlreadyClosed) {
-        final AgentScope scope = activeScope();
-        if (scope != null && AWS_HTTP == scope.span().getOperationName()) {
-          scope.close();
-        }
-      }
+    public static void methodExit(@Advice.Enter final AgentScope scope) {
+      scope.close();
     }
 
     /**

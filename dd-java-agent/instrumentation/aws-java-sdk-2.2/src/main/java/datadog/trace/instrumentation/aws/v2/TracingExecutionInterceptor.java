@@ -72,12 +72,14 @@ public class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void beforeTransmission(
       final Context.BeforeTransmission context, final ExecutionAttributes executionAttributes) {
-    final AgentSpan span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
-    if (span != null) {
-      // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
-      // doesn't provide a way to run code in the same thread after transmission has been scheduled.
-      final AgentScope scope = activateSpan(span);
-      scope.setAsyncPropagation(true);
+    if (isLegacyAwsTracing) {
+      final AgentSpan span = executionAttributes.getAttribute(SPAN_ATTRIBUTE);
+      if (span != null) {
+        // This scope will be closed by AwsHttpClientInstrumentation since ExecutionInterceptor API
+        // doesn't provide a way to run code in same thread after transmission has been scheduled.
+        final AgentScope scope = activateSpan(span);
+        scope.setAsyncPropagation(true);
+      }
     }
   }
 

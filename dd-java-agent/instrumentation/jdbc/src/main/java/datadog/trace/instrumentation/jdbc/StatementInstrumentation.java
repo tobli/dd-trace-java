@@ -88,21 +88,18 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
         DECORATE.afterStart(span);
         DECORATE.onConnection(
             span, connection, InstrumentationContext.get(Connection.class, DBInfo.class));
-//        if (span != null && DECORATE.injectSQLComment()) {
-//          SortedMap<String, Object> tags = new TreeMap<>();
-//          switch (SQL_COMMENT_INJECTION_MODE) {
-//            case SQL_COMMENT_INJECTION_STATIC:
-//              tags = DECORATE.sortedKeyValuePairs(span, false);
-//              break;
-//            case SQL_COMMENT_INJECTION_FULL:
-//
-//              break;
-//          }
-//          sql = DECORATE.augmentSQLStatement(sql, tags);
-//        }
-        SortedMap<String, Object> tags = new TreeMap<>();
-        tags = DECORATE.sortedKeyValuePairs(span, true);
-        sql = DECORATE.augmentSQLStatement(sql, tags);
+        if (span != null && DECORATE.injectSQLComment()) {
+          SortedMap<String, Object> tags = new TreeMap<>();
+          switch (SQL_COMMENT_INJECTION_MODE) {
+            case SQL_COMMENT_INJECTION_STATIC:
+              tags = DECORATE.sortedKeyValuePairs(span, false);
+              break;
+            case SQL_COMMENT_INJECTION_FULL:
+              tags = DECORATE.sortedKeyValuePairs(span, true);
+              break;
+          }
+          sql = DECORATE.augmentSQLStatement(sql, tags);
+        }
         DECORATE.onStatement(span, DBQueryInfo.ofStatement(sql));
         return activateSpan(span);
       } catch (SQLException e) {

@@ -147,7 +147,7 @@ class JDBCInstrumentationTest extends AgentTestRunner {
     injectSysConfig("dd.trace.jdbc.prepared.statement.class.name", "test.TestPreparedStatement")
     injectSysConfig("dd.integration.jdbc-datasource.enabled", "true")
     // TODO: use this model to write tests around the sql injection mode feature
-    //    injectSysConfig("dd.sql.commenter.injection.mode", "full")
+    injectSysConfig("dd.sql.commenter.injection.mode", "full")
   }
 
   def setupSpec() {

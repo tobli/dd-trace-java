@@ -1,17 +1,20 @@
 package datadog.trace.instrumentation.aws.v0;
 
 import com.amazonaws.handlers.HandlerContextKey;
-import datadog.trace.bootstrap.instrumentation.api.AgentScope;
+import datadog.trace.api.Config;
+import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.UTF8BytesString;
 import datadog.trace.bootstrap.instrumentation.decorator.BaseDecorator;
 
 public class OnErrorDecorator extends BaseDecorator {
-  // aws1.x sdk doesn't have any truly async clients so we can store scope in request context safely
-  public static final HandlerContextKey<AgentScope> SCOPE_CONTEXT_KEY =
-      new HandlerContextKey<>("DatadogScope"); // same as TracingRequestHandler.SCOPE_CONTEXT_KEY
+
+  public static final HandlerContextKey<AgentSpan> SPAN_CONTEXT_KEY =
+      new HandlerContextKey<>("DatadogSpan"); // same as TracingRequestHandler.SPAN_CONTEXT_KEY
 
   public static final OnErrorDecorator DECORATE = new OnErrorDecorator();
   private static final CharSequence JAVA_AWS_SDK = UTF8BytesString.create("java-aws-sdk");
+
+  public static final boolean IS_LEGACY = Config.get().isLegacyTracingEnabled(false, "aws-sdk");
 
   @Override
   protected String[] instrumentationNames() {

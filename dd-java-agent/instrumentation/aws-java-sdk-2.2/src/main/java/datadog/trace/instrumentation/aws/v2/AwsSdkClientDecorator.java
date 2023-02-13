@@ -1,5 +1,6 @@
 package datadog.trace.instrumentation.aws.v2;
 
+import datadog.trace.api.Config;
 import datadog.trace.bootstrap.instrumentation.api.AgentPropagation;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.api.ResourceNamePriorities;
@@ -24,6 +25,8 @@ public class AwsSdkClientDecorator extends HttpClientDecorator<SdkHttpRequest, S
 
   // We only want tag interceptor to take priority
   private static final byte RESOURCE_NAME_PRIORITY = ResourceNamePriorities.TAG_INTERCEPTOR - 1;
+
+  public static final boolean IS_LEGACY = Config.get().isLegacyTracingEnabled(false, "aws-sdk");
 
   public AgentSpan onSdkRequest(final AgentSpan span, final SdkRequest request) {
     // S3

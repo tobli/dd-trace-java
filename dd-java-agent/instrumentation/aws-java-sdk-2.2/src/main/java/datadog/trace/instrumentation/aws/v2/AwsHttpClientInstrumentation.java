@@ -4,7 +4,11 @@ import static datadog.trace.agent.tooling.bytebuddy.matcher.HierarchyMatchers.ex
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.nameStartsWith;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.named;
 import static datadog.trace.agent.tooling.bytebuddy.matcher.NameMatchers.namedOneOf;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activateSpan;
 import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.activeScope;
+import static datadog.trace.bootstrap.instrumentation.api.AgentTracer.noopSpan;
+import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.AWS_HTTP;
+import static datadog.trace.instrumentation.aws.v2.AwsSdkClientDecorator.IS_LEGACY;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 
@@ -47,7 +51,7 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
   }
 
   public static class AwsHttpClientAdvice {
-    // scope.close here doesn't actually close the span.
+    // scope.close here doesn't actually finish the span.
 
     /**
      * FIXME: This is a hack to prevent netty instrumentation from messing things up.
@@ -59,25 +63,23 @@ public final class AwsHttpClientInstrumentation extends AbstractAwsClientInstrum
      * stored in channel attributes.
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static boolean methodEnter(@Advice.This final Object thiz) {
-      if (thiz instanceof MakeAsyncHttpRequestStage) {
+    public static AgentScope methodEnter(@Advice.This final Object thiz) {
+      if (IS_LEGACY) {
         final AgentScope scope = activeScope();
-        if (scope != null) {
-          scope.close();
-          return true;
+        if (scope != null && AWS_HTTP == scope.span().getSpanName()) {
+          if (thiz instanceof MakeAsyncHttpRequestStage) {
+            scope.close(); // close async legacy HTTP span to avoid Netty leak
+          } else {
+            return scope; // keep sync legacy HTTP span alive for duration of call
+          }
         }
       }
-      return false;
+      return activateSpan(noopSpan());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Enter final boolean scopeAlreadyClosed) {
-      if (!scopeAlreadyClosed) {
-        final AgentScope scope = activeScope();
-        if (scope != null) {
-          scope.close();
-        }
-      }
+    public static void methodExit(@Advice.Enter final AgentScope scope) {
+      scope.close();
     }
 
     /**

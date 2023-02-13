@@ -437,7 +437,11 @@ public class PowerWAFModule implements AppSecModule {
                   action,
                   ctxAndAddr.actionInfoMap.keySet());
             } else if ("block_request".equals(actionInfo.type)) {
-              Flow.Action.RequestBlockingAction rba = createRequestBlockingAction(actionInfo);
+              Flow.Action.RequestBlockingAction rba = createBlockRequestAction(actionInfo);
+              flow.setAction(rba);
+              break;
+            } else if ("redirect_request".equals(actionInfo.type)) {
+              Flow.Action.RequestBlockingAction rba = createRedirectRequestAction(actionInfo);
               flow.setAction(rba);
               break;
             } else {
@@ -450,7 +454,7 @@ public class PowerWAFModule implements AppSecModule {
       }
     }
 
-    private Flow.Action.RequestBlockingAction createRequestBlockingAction(ActionInfo actionInfo) {
+    private Flow.Action.RequestBlockingAction createBlockRequestAction(ActionInfo actionInfo) {
       try {
         int statusCode =
             ((Number) actionInfo.parameters.getOrDefault("status_code", 403)).intValue();
@@ -462,6 +466,24 @@ public class PowerWAFModule implements AppSecModule {
           log.warn("Unknown content type: {}; using auto", contentType);
         }
         return new Flow.Action.RequestBlockingAction(statusCode, blockingContentType);
+      } catch (RuntimeException cce) {
+        log.warn("Invalid blocking action data", cce);
+        return null;
+      }
+    }
+
+    private Flow.Action.RequestBlockingAction createRedirectRequestAction(ActionInfo actionInfo) {
+      try {
+        int statusCode =
+            ((Number) actionInfo.parameters.getOrDefault("status_code", 303)).intValue();
+        if (statusCode < 300 || statusCode > 399) {
+          statusCode = 303;
+        }
+        String location = (String) actionInfo.parameters.get("location");
+        if (location == null) {
+          throw new RuntimeException("redirect_request action has no location");
+        }
+        return new Flow.Action.RequestBlockingAction(statusCode, location);
       } catch (RuntimeException cce) {
         log.warn("Invalid blocking action data", cce);
         return null;

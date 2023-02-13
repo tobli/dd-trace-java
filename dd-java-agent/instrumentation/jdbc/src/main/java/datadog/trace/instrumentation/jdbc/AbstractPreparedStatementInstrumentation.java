@@ -14,6 +14,8 @@ import datadog.trace.bootstrap.instrumentation.api.AgentScope;
 import datadog.trace.bootstrap.instrumentation.api.AgentSpan;
 import datadog.trace.bootstrap.instrumentation.jdbc.DBInfo;
 import datadog.trace.bootstrap.instrumentation.jdbc.DBQueryInfo;
+
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -21,6 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
 import net.bytebuddy.asm.Advice;
 
 public abstract class AbstractPreparedStatementInstrumentation extends Instrumenter.Tracing
@@ -33,8 +36,8 @@ public abstract class AbstractPreparedStatementInstrumentation extends Instrumen
 
   @Override
   public String[] helperClassNames() {
-    return new String[] {
-      packageName + ".JDBCDecorator",
+    return new String[]{
+        packageName + ".JDBCDecorator",
     };
   }
 
@@ -70,27 +73,10 @@ public abstract class AbstractPreparedStatementInstrumentation extends Instrumen
           return null;
         }
 
-        // TODO: given that we aren't grabbing the actual argument here,
-        // im not sure this will work but trying to first get the statement
-        // instrumentation to work via a local test
-
         final AgentSpan span = startSpan(DATABASE_QUERY);
         DECORATE.afterStart(span);
         DECORATE.onConnection(
             span, connection, InstrumentationContext.get(Connection.class, DBInfo.class));
-        String sqlText = queryInfo.getSql().toString();
-        if (span != null && DECORATE.injectSQLComment()) {
-          SortedMap<String, Object> tags = new TreeMap<>();
-          switch (SQL_COMMENT_INJECTION_MODE) {
-            case SQL_COMMENT_INJECTION_STATIC:
-              tags = DECORATE.sortedKeyValuePairs(span, false);
-              break;
-            case SQL_COMMENT_INJECTION_FULL:
-              tags = DECORATE.sortedKeyValuePairs(span, true);
-              break;
-          }
-          queryInfo = DBQueryInfo.ofPreparedStatement(DECORATE.augmentSQLStatement(sqlText, tags));
-        }
         DECORATE.onPreparedStatement(span, queryInfo);
         return activateSpan(span);
       } catch (SQLException e) {

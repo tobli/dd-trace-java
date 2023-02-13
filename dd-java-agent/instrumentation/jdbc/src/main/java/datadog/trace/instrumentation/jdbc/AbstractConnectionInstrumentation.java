@@ -41,7 +41,7 @@ public abstract class AbstractConnectionInstrumentation extends Instrumenter.Tra
     transformation.applyAdvice(
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
-            // Also include CallableStatement, which is a sub type of PreparedStatement
+            // Also include CallableStatement, which is a subtype of PreparedStatement
             .and(returns(hasInterface(named("java.sql.PreparedStatement")))),
         AbstractConnectionInstrumentation.class.getName() + "$ConnectionPrepareAdvice");
   }
@@ -55,7 +55,6 @@ public abstract class AbstractConnectionInstrumentation extends Instrumenter.Tra
       ContextStore<Statement, DBQueryInfo> contextStore =
           InstrumentationContext.get(Statement.class, DBQueryInfo.class);
       if (null == contextStore.get(statement)) {
-        sql = String.format("%s /*%s*/", sql, "my=comment");
         DBQueryInfo info = DBQueryInfo.ofPreparedStatement(sql);
         contextStore.put(statement, info);
         logQueryInfoInjection(connection, statement, info);

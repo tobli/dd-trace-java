@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 @AutoService(Instrumenter.class)
 public final class StatementInstrumentation extends Instrumenter.Tracing
     implements Instrumenter.ForBootstrap, Instrumenter.ForTypeHierarchy {
-  private static final Logger log = LoggerFactory.getLogger(StatementInstrumentation.class);
 
   public StatementInstrumentation() {
     super("jdbc");
@@ -101,13 +100,9 @@ public final class StatementInstrumentation extends Instrumenter.Tracing
 //          }
 //          sql = DECORATE.augmentSQLStatement(sql, tags);
 //        }
-        final SortedMap<String, Object> tags = DECORATE.sortedKeyValuePairs(span, true);
-        String tagString = tags.keySet().stream()
-            .map(key -> key + "=" + tags.get(key))
-            .collect(Collectors.joining(", ", "{", "}"));
-        log.info("Tags: " + tagString);
+        SortedMap<String, Object> tags = new TreeMap<>();
+        tags = DECORATE.sortedKeyValuePairs(span, true);
         sql = DECORATE.augmentSQLStatement(sql, tags);
-        log.info("SQL: " + sql);
         DECORATE.onStatement(span, DBQueryInfo.ofStatement(sql));
         return activateSpan(span);
       } catch (SQLException e) {

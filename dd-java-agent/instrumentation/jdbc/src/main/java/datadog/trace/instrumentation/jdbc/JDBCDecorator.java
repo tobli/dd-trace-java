@@ -71,6 +71,12 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
     }
   }
 
+  public static void logException(Exception ex) {
+    if (log.isDebugEnabled()) {
+      log.debug("JDBC instrumentation error", ex);
+    }
+  }
+
   @Override
   protected String[] instrumentationNames() {
     return new String[]{"jdbc"};
@@ -176,12 +182,12 @@ public class JDBCDecorator extends DatabaseClientDecorator<DBInfo> {
   }
 
   public AgentSpan onStatement(AgentSpan span, DBQueryInfo dbQueryInfo) {
-    log.info("Making span on statement with sql: " + span.getResourceName().toString());
-    log.info("DB query info sql: " + dbQueryInfo.getSql().toString());
+    log.debug("DB query info stmt sql: " + dbQueryInfo.getSql().toString());
     return withQueryInfo(span, dbQueryInfo, JDBC_STATEMENT);
   }
 
   public AgentSpan onPreparedStatement(AgentSpan span, DBQueryInfo dbQueryInfo) {
+    log.debug("DB query info on prepared sql: " + dbQueryInfo.getSql().toString());
     return withQueryInfo(span, dbQueryInfo, JDBC_PREPARED_STATEMENT);
   }
 

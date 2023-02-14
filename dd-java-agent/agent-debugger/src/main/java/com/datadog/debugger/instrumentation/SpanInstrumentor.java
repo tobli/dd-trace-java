@@ -3,6 +3,7 @@ package com.datadog.debugger.instrumentation;
 import static com.datadog.debugger.instrumentation.Types.DEBUGGER_CONTEXT_TYPE;
 import static com.datadog.debugger.instrumentation.Types.DEBUGGER_SPAN_TYPE;
 import static com.datadog.debugger.instrumentation.Types.STRING_TYPE;
+import static com.datadog.debugger.util.ClassFileHelper.normalizeFilePath;
 
 import com.datadog.debugger.probe.SpanProbe;
 import com.datadog.debugger.probe.Where;
@@ -131,7 +132,7 @@ public class SpanInstrumentor extends Instrumentor {
   }
 
   private String buildResourceName() {
-    String resourceName = classNode.name + "." + methodNode.name;
+    String resourceName = normalizeFilePath(classNode.name) + "." + methodNode.name;
     if (isLineProbe) {
       Where.SourceLine[] targetLines = definition.getWhere().getSourceLines();
       if (targetLines == null || targetLines.length == 0) {

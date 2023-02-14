@@ -35,6 +35,18 @@ public class SpanProbeInstrumentationTest extends ProbeInstrumentationTest {
   }
 
   @Test
+  public void methodSimpleSpanWithPackage() throws IOException, URISyntaxException {
+    final String CLASS_NAME = "com.datadog.debugger.CapturedSnapshot10";
+    MockTracer tracer = installSingleSpan(CLASS_NAME, "main", "int (java.lang.String)", null);
+    Class<?> testClass = compileAndLoadClass(CLASS_NAME);
+    int result = Reflect.on(testClass).call("main", "1").get();
+    assertEquals(1764, result);
+    assertEquals(1, tracer.spans.size());
+    assertEquals(CLASS_NAME + ".main", tracer.spans.get(0).resourceName);
+    assertTrue(tracer.spans.get(0).isFinished());
+  }
+
+  @Test
   public void methodSimpleSpanWithTags() throws IOException, URISyntaxException {
     final String CLASS_NAME = "CapturedSnapshot01";
     MockTracer tracer =
